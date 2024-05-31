@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,24 +20,85 @@ export class BooksService {
 
       }
     } catch (error) {
-    
+      throw new InternalServerErrorException()
     }
 
   }
 
   async findAll() {
-    return `This action returns all books`;
+    try {
+      const books: Book[] = await this.bookRepository.find()
+      return { mensage: 'founds',
+      booksFounds: books
+      }
+    } catch (error) {
+      throw new InternalServerErrorException()
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} book`;
+ async findOne(id: string) {
+    try {
+
+      const book: Book = await this.bookRepository.findOneBy({ id: id })
+
+      return { mensage: 'it was found', 
+      booksFounds: book
+      }
+    } catch (error) {
+      throw new NotFoundException('Book not found')
+    }
+
   }
 
-  update(id: number, updateBookDto: UpdateBookDto) {
-    return `This action updates a #${id} book`;
+ async  update(id: string, updateBookDto: UpdateBookDto) {
+
+  try {
+    const book: Book = await this.bookRepository.findOneBy({ id: id })
+
+    if (!book) {
+      throw new NotFoundException('Book not found')
+    }
+
+    const bookNew = {
+      id: book.id,
+      name: updateBookDto.name,
+      amount: updateBookDto.amount,
+      price: updateBookDto.price,
+      author: book.author
+    }
+
+    await this.bookRepository.save(bookNew)
+
+    return {
+      mensage: 'book updated',
+      book: book
+    }
+
+  
+  }catch (error) {
+    throw new InternalServerErrorException()
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} book`;
+  }
+
+ async remove(id: string) {
+  
+  const book: Book = await this.bookRepository.findOneBy({ id: id })
+
+    if (!book) {
+      throw new NotFoundException('Book not found')
+    }
+
+  try {
+    
+    await this.bookRepository.softDelete(id);
+
+    return {
+      mensage: 'book deleted successfully'
+    }
+
+  }catch (error) {
+    throw new InternalServerErrorException()
+  }
   }
 }

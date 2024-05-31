@@ -6,7 +6,7 @@ export class CreateBookDto {
 
     @IsNumber()
     @ApiProperty()
-    id: number;
+    id: string;
 
     @IsString()
     @ApiProperty()
